@@ -309,8 +309,8 @@ int main(int argc, char **argv) {
         try {
             flauschImage.addInputImage(file.c_str());
             cout << "Image added to the render pipeline!" << endl;
-        } catch(...) {
-            cout << "Error by adding the image!" << endl;
+        }catch (const std::exception &exc){
+            cerr << exc.what() << std::endl;
         }
     }
     
@@ -320,8 +320,8 @@ int main(int argc, char **argv) {
     try {
         flauschImage.writeOutputImage(file.c_str());
         cout << "Image rendered and written to disk!" << endl;
-    } catch(...) {
-        cout << "Error by rendering or writing!" << endl;
+    } catch (const std::exception &exc){
+            cerr << exc.what() << std::endl;
     }
     
     
