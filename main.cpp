@@ -287,17 +287,45 @@ public:
 
 int main(int argc, char **argv) {
     
-    cout << "Commands:" << endl;
+    /*cout << "Commands:" << endl;
     cout << "add   <imagefile>\tAdd the image to the render pipeline" << endl;
     cout << "write <imagefile>\tRender and write the image to disk" << endl;
     cout << "print            \tShows infos about the resulting image" << endl;
-    cout << "exit             \tExit the programm" << endl << endl;
+    cout << "exit             \tExit the programm" << endl << endl;*/
+    
+    cout << "EXRCombine" << endl;
+    
+    if(argc < 3){
+        cout << "Too few arguments!" << endl;
+        return 0;
+    }
     
     string command;
     string file;
     MergeImage flauschImage;
     
-    while(true){
+    for(int i = 2; i < argc; i++){
+        file = GetCurrentWorkingDir() + "/" + argv[i];
+        try {
+            flauschImage.addInputImage(file.c_str());
+            cout << "Image added to the render pipeline!" << endl;
+        } catch(...) {
+            cout << "Error by adding the image!" << endl;
+        }
+    }
+    
+    flauschImage.print();
+        
+    file = GetCurrentWorkingDir() + "/" + argv[1];
+    try {
+        flauschImage.writeOutputImage(file.c_str());
+        cout << "Image rendered and written to disk!" << endl;
+    } catch(...) {
+        cout << "Error by rendering or writing!" << endl;
+    }
+    
+    
+    /*while(true){
         cout << ">> ";
         cin >> command;
         getchar();
@@ -329,7 +357,7 @@ int main(int argc, char **argv) {
         } else {
             cout << "Unknown command!" << endl; 
         }
-    }
+    }*/
     
     return 0;
 }
