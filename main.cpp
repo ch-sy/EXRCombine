@@ -93,7 +93,7 @@ public:
             
         }
         setFrameBuffer(frameBuffer);
-        readPixels(dw.min.y, dw.min.y);
+        readPixels(dw.min.y, dw.max.y);
     }
     
     ~RenderImage() {
@@ -166,10 +166,12 @@ private:
         
         // Example: Build the median of all layers
         for(size_t layer = 0; layer < layerCount; ++layer) {
-            outPixel.r += inPixel[layer].r / half(layerCount);
-            outPixel.g += inPixel[layer].g / half(layerCount);
-            outPixel.b += inPixel[layer].b / half(layerCount);
-            outPixel.a += inPixel[layer].a / half(layerCount);
+            half preMul = outPixel.a*(1-inPixel[layer].a);
+            outPixel.a = (inPixel[layer].a+preMul);
+            half div = 1/outPixel.a;
+            outPixel.r = (inPixel[layer].r*inPixel[layer].r+outPixel.r*(preMul))*div;
+            outPixel.g = (inPixel[layer].g*inPixel[layer].g+outPixel.g*(preMul))*div;
+            outPixel.b = (inPixel[layer].b*inPixel[layer].b+outPixel.b*(preMul))*div;
         }
     }
     
@@ -188,6 +190,10 @@ private:
             outPixel.b += inPixel[img].b * mult;
             outPixel.a += inPixel[img].a * mult;
         }
+    }
+    
+    void red(Rgba &outPixel){
+        outPixel = {1.0, 1.0, 0.0, 1.0};
     }
     
     // render renders the output
@@ -217,13 +223,19 @@ private:
                     for(auto image : inputImages) {
                         bufferImage[img++] = image->getPixel(ix, iy, layer);
                     }
+                    mergeImage(bufferImage, bufferLayer[layer], imageCount);
                 }
+                
                 composeLayers(bufferLayer, pixels[ix+iy*width], layerCount);
+                
+                //pixels[ix+iy*width] = inputImages[0]->getNearestNeighbour(float(ix+0.5)/width, float(iy+0.5)/(height), 0);
             }
         }
-            
+        
         delete[] bufferLayer;
         delete[] bufferImage;
+        
+        
     }
     
 public:
