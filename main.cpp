@@ -8,6 +8,22 @@
 #include <set>
 #include <string>
 #include <stdexcept>
+#include <stdio.h>  /* defines FILENAME_MAX */
+// #define WINDOWS  /* uncomment this line to use it for windows.*/ 
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
+std::string GetCurrentWorkingDir( void ) {
+  char buff[FILENAME_MAX];
+  GetCurrentDir( buff, FILENAME_MAX );
+  std::string current_working_dir(buff);
+  return current_working_dir;
+}
 
 #define CLAMP(x, min_x, max_x) ((x) < (min_x) ? (min_x) : ((x) > (max_x) ? (max_x) : (x)))
 
@@ -271,7 +287,6 @@ public:
 
 int main(int argc, char **argv) {
     
-    
     cout << "Commands:" << endl;
     cout << "add   <imagefile>\tAdd the image to the render pipeline" << endl;
     cout << "write <imagefile>\tRender and write the image to disk" << endl;
@@ -285,10 +300,13 @@ int main(int argc, char **argv) {
     while(true){
         cout << ">> ";
         cin >> command;
+        getchar();
         if(command.compare("exit") == 0) {
             break;
         } else if(command.compare("add") == 0) {
             cin >> file;
+            getchar();
+            file = GetCurrentWorkingDir() + "/" + file;
             try {
                 flauschImage.addInputImage(file.c_str());
                 cout << "Image added to the render pipeline!" << endl;
@@ -298,6 +316,8 @@ int main(int argc, char **argv) {
             
         } else if(command.compare("write") == 0){
             cin >> file;
+            getchar();
+            file = GetCurrentWorkingDir() + "/" + file;
             try {
                 flauschImage.writeOutputImage(file.c_str());
                 cout << "Image rendered and written to disk!" << endl;
