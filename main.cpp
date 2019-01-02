@@ -1,4 +1,5 @@
 #include <OpenEXR/ImfInputFile.h>
+#include <OpenEXR/ImfOutputFile.h>
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImfArray.h>
 #include <OpenEXR/ImfChannelList.h>
@@ -8,22 +9,6 @@
 #include <set>
 #include <string>
 #include <stdexcept>
-#include <stdio.h>  /* defines FILENAME_MAX */
-// #define WINDOWS  /* uncomment this line to use it for windows.*/ 
-#ifdef WINDOWS
-#include <direct.h>
-#define GetCurrentDir _getcwd
-#else
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#endif
-
-std::string GetCurrentWorkingDir( void ) {
-  char buff[FILENAME_MAX];
-  GetCurrentDir( buff, FILENAME_MAX );
-  std::string current_working_dir(buff);
-  return current_working_dir;
-}
 
 #define CLAMP(x, min_x, max_x) ((x) < (min_x) ? (min_x) : ((x) > (max_x) ? (max_x) : (x)))
 
@@ -198,7 +183,7 @@ private:
     
     // render renders the output
     void render() {
-        size_t arSize = width * height;
+        size_t arSize = width * height * layerCount;
         
         // Free the memory of the previous pixels
         if(pixels != nullptr)
@@ -224,9 +209,13 @@ private:
                         bufferImage[img++] = image->getPixel(ix, iy, layer);
                     }
                     mergeImage(bufferImage, bufferLayer[layer], imageCount);
+                    
+                    pixels[(ix+iy*width)*layerCount + layer] = bufferLayer[layer];
                 }
                 
-                composeLayers(bufferLayer, pixels[ix+iy*width], layerCount);
+                
+                
+                //composeLayers(bufferLayer, pixels[ix+iy*width], layerCount);
                 
                 //pixels[ix+iy*width] = inputImages[0]->getNearestNeighbour(float(ix+0.5)/width, float(iy+0.5)/(height), 0);
             }
@@ -265,9 +254,57 @@ public:
     // writeOutputImage renders and writes the image to disk
     void writeOutputImage(const char fileName[]) {
         render();
-        RgbaOutputFile outputImage(fileName, width, height, Imf::WRITE_RGBA);
+        /*RgbaOutputFile outputImage(fileName, width, height, Imf::WRITE_RGBA);
         outputImage.setFrameBuffer(pixels, 1, width);
-        outputImage.writePixels(height);
+        outputImage.writePixels(height);*/
+        char nameBuf[8];
+        Header header (width, height);
+        for(int layer = 0; layer < layerCount; layer++){
+            
+            snprintf(nameBuf, 8, "Fur%i.R", layer);
+            header.channels().insert(nameBuf, Channel (HALF));
+            snprintf(nameBuf, 8, "Fur%i.G", layer);
+            header.channels().insert(nameBuf, Channel (HALF));
+            snprintf(nameBuf, 8, "Fur%i.B", layer);
+            header.channels().insert(nameBuf, Channel (HALF));
+            snprintf(nameBuf, 8, "Fur%i.A", layer);
+            header.channels().insert(nameBuf, Channel (HALF));
+        }
+        
+
+        OutputFile file(fileName, header);
+        FrameBuffer frameBuffer;
+        cout << layerCount << endl;
+        for(int layer = 0; layer < layerCount; layer++){
+            snprintf(nameBuf, 8, "Fur%i.R", layer);
+            cout << nameBuf << endl;
+            frameBuffer.insert (nameBuf,
+                            Slice (HALF,
+                            (char *) (pixels + sizeof(Rgba) * layer),
+                            sizeof(Rgba) * layer,
+                            sizeof(Rgba) * layerCount * width));
+            snprintf(nameBuf, 8, "Fur%i.G", layer);
+            frameBuffer.insert (nameBuf,
+                            Slice (HALF,
+                            (char *) (pixels + sizeof(Rgba) * layer + sizeof(half)),
+                            sizeof(Rgba) * layer,
+                            sizeof(Rgba) * layerCount * width));
+            snprintf(nameBuf, 8, "Fur%i.B", layer);
+            frameBuffer.insert (nameBuf,
+                            Slice (HALF,
+                            (char *) (pixels + sizeof(Rgba) * layer + sizeof(half) * 2),
+                            sizeof(Rgba) * layer,
+                            sizeof(Rgba) * layerCount * width));
+            snprintf(nameBuf, 8, "Fur%i.A", layer);
+            frameBuffer.insert (nameBuf,
+                            Slice (HALF,
+                            (char *) (pixels + sizeof(Rgba) * layer + sizeof(half) * 2),
+                            sizeof(Rgba) * layer,
+                            sizeof(Rgba) * layerCount * width));
+        }
+
+        file.setFrameBuffer(frameBuffer);
+        file.writePixels (height); 
     }
     
     // print shows infos about the resulting image
@@ -317,9 +354,8 @@ int main(int argc, char **argv) {
     MergeImage flauschImage;
     
     for(int i = 2; i < argc; i++){
-        file = GetCurrentWorkingDir() + "/" + argv[i];
         try {
-            flauschImage.addInputImage(file.c_str());
+            flauschImage.addInputImage(argv[i]);
             cout << "Image added to the render pipeline!" << endl;
         }catch (const std::exception &exc){
             cerr << exc.what() << std::endl;
@@ -328,9 +364,8 @@ int main(int argc, char **argv) {
     
     flauschImage.print();
         
-    file = GetCurrentWorkingDir() + "/" + argv[1];
     try {
-        flauschImage.writeOutputImage(file.c_str());
+        flauschImage.writeOutputImage(argv[1]);
         cout << "Image rendered and written to disk!" << endl;
     } catch (const std::exception &exc){
             cerr << exc.what() << std::endl;
