@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <stdio.h>
 
 using namespace Imf;
 using namespace std;
@@ -107,7 +108,7 @@ public:
 };
 
 int main(int argc, char **argv) {
-    cout << "EXRCombine2" << endl;
+    cout << "Combine images..." << endl;
     
     if(argc < 3){
         cout << "Too few arguments!" << endl;
@@ -118,19 +119,20 @@ int main(int argc, char **argv) {
     
     for(int i = 2; i < argc; i++){
         try {
+            printf("[% 3i%] Loading %s\n", (i - 2) * 100 / (argc - 1), argv[i]);
             flauschImage.addImage(argv[i]);
-            cout << "Image added to the render pipeline!" << endl;
-        }catch (const std::exception &exc){
+            
+        } catch (const std::exception &exc) {
             cerr << exc.what() << std::endl;
         }
     }
         
     try {
+        printf("[% 3i%] Writing %s\n", (argc - 2) * 100 / (argc - 1), argv[1]);
         flauschImage.writeImage(argv[1]);
-        cout << "Image rendered and written to disk!" << endl;
-    } catch (const std::exception &exc){
-            cerr << exc.what() << std::endl;
+    } catch (const std::exception &exc) {
+        cerr << exc.what() << std::endl;
     }
-
+    cout << "[100%] Finish!" << endl;
     return 0;
 }
