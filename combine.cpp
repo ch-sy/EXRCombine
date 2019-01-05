@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <stdio.h>
+#include <omp.h>
 
 using namespace Imf;
 using namespace std;
@@ -76,6 +77,7 @@ public:
             img.readPixels(dw.min.y, dw.max.y);
 
             // Add the pixel
+            #pragma omp parallel for
             for(size_t i = 0; i < subpixelCount; i++)
                 pixelDst[i] += pixelSrc[i];
         }
@@ -86,6 +88,7 @@ public:
     void writeImage(char* filename) {
         // Normalise pixel
         half mult = half(1) / half(imageCount);
+        #pragma omp parallel for
         for(size_t i = 0; i < subpixelCount; i++)
             pixelDst[i] *= mult;
 
@@ -115,13 +118,13 @@ int main(int argc, char **argv) {
         return 0;
     }
     
+    double wtime = omp_get_wtime();
     Combine flauschImage;
     
     for(int i = 2; i < argc; i++){
         try {
             printf("[% 3i%] Loading %s\n", (i - 2) * 100 / (argc - 1), argv[i]);
             flauschImage.addImage(argv[i]);
-            
         } catch (const std::exception &exc) {
             cerr << exc.what() << std::endl;
         }
@@ -133,6 +136,6 @@ int main(int argc, char **argv) {
     } catch (const std::exception &exc) {
         cerr << exc.what() << std::endl;
     }
-    cout << "[100%] Finish!" << endl;
+    cout << "[100%] Finished in " << omp_get_wtime() - wtime << " seconds!" << endl;
     return 0;
 }
