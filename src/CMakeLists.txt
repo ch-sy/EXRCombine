@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(combine)
+project(exrcombine)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -9,8 +9,8 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-add_executable(combine combine.cpp)
-target_link_libraries(combine "libIlmImf.so")
-target_link_libraries(combine "libHalf.so")
+add_executable(exrcombine combine.cpp)
+target_link_libraries(exrcombine "libIlmImf.so")
+target_link_libraries(exrcombine "libHalf.so")
 
-install(TARGETS combine RUNTIME DESTINATION bin)
+install(TARGETS exrcombine RUNTIME DESTINATION bin)
