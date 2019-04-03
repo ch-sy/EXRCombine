@@ -10,7 +10,7 @@ license=('MIT')
 depends=('openexr' 'openmpi')
 makedepends=('cmake')
 source=("https://github.com/ch-sy/EXRCombine")
-md5sums=('0f573e6849c18ceeb5caedad5a966661')
+md5sums=('cb93195a879de40873568731c0f792f4')
 
 build() {
     cd "$srcdir"
