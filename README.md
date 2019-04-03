@@ -5,7 +5,7 @@ Render Blender scenes at low sample rate and merge them to one high-quality imag
 
 1. Set the output of your scenes so that all passes of all scenes you want are written to one multilayer EXR file. Use either the output settings or create a file output node in the compositor.
 2. Render your scene(s) to one multilayer EXR file multiple times at low sample rate with different seed. For still images, simply click "animate seed" and render the whole animation.
-3. Combine them with this tool `combine ./combined/layers.exr ./out/frame*.exr`.
+3. Combine them with this tool `exrcombine ./combined/layers.exr ./out/frame*.exr`.
 4. Do the compositing in another scene. Load `./combined/layers.exr` as image source.
 - You may do this for an arbitrary amount of EXR files with arbitrary layers. But less files make less work, so it is recommended to put all in one file or one file per scene.
 
@@ -22,14 +22,15 @@ Render Blender scenes at low sample rate and merge them to one high-quality imag
 
 - Needs quite a lot of disk space.
 - EXR output is not supported by SheepIt render farm.
+- Combining partial renders is slightly slower than one big render: https://blender.stackexchange.com/questions/7126/why-is-render-stacking-less-efficient-noisier-than-rendering-normally
 
 ## Installation
 
 ### For Arch Linux users
 
-  git clone https://github.com/ch-sy/EXRCombine
-  cd EXRCombine
-  makepkg -i
+    git clone https://github.com/ch-sy/EXRCombine
+    cd EXRCombine
+    makepkg -i
 
 ### Other platforms
 
@@ -37,4 +38,6 @@ TODO
 
 ## Usage
 
-TODO
+    exrcombine output.exr input1.exr [input2.exr [...]]
+
+All input files must have the same dimensions and layer structure.
